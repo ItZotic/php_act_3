@@ -55,7 +55,6 @@ class Database {
 
 // Rate Limiting (Simple Implementation)
 function checkRateLimit($identifier, $maxAttempts = 5, $timeWindow = 900) {
-    session_start();
     $key = 'rate_limit_' . $identifier;
     
     if (!isset($_SESSION[$key])) {
