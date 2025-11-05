@@ -1,23 +1,18 @@
 <?php
-$host = "localhost";
-$db   = "portfolio_db";
-$user = "postgres";
-$pass = "1234567890";
+require_once 'config.php';
 
 $userId = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 $userData = null;
 $error = '';
+$db = Database::getInstance()->getConnection();
 
 if ($userId <= 0) {
     $error = 'Invalid resume link.';
 } else {
     try {
-        $pdo = new PDO("pgsql:host=$host;dbname=$db", $user, $pass);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-        $stmt = $pdo->prepare("SELECT username, full_name, email, phone, skills, education, bio FROM users WHERE id = :id");
+        $stmt = $db->prepare("SELECT username, full_name, email, phone, skills, education, bio FROM users WHERE id = :id");
         $stmt->execute(['id' => $userId]);
-        $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+        $userData = $stmt->fetch();
 
         if (!$userData) {
             $error = 'The requested resume could not be found.';

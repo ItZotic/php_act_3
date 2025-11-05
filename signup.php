@@ -1,26 +1,20 @@
 <?php
+require_once 'config.php';
 session_start();
-
-$host = "localhost";
-$db   = "portfolio_db";
-$user = "postgres";  
-$pass = "1234567890";
 
 $error = "";
 $success = "";
+$db = Database::getInstance()->getConnection();
 
 try {
-    $pdo = new PDO("pgsql:host=$host;dbname=$db", $user, $pass);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        $username = trim($_POST["username"]);
-        $password = trim($_POST["password"]);
+        $username = sanitizeInput($_POST["username"]);
+        $password = $_POST["password"];
 
-        if ($username === "" || $password === "") {
+        if (empty($username) || empty($password)) {
             $error = "All fields are required!";
         } else {
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE username = :username");
+            $stmt = $db->prepare("SELECT * FROM users WHERE username = :username");
             $stmt->execute(["username" => $username]);
 
             if ($stmt->fetch()) {
@@ -28,7 +22,10 @@ try {
             } else {
                 $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
-                $stmt = $pdo->prepare("INSERT INTO users (username, password, full_name, email, phone, skills, education, bio) VALUES (:username, :password, '', '', '', '', '', '')");
+                $stmt = $db->prepare(
+                    "INSERT INTO users (username, password, full_name, email, phone, skills, education, bio, created_at) 
+                     VALUES (:username, :password, '', '', '', '', '', '', NOW())"
+                );
                 $stmt->execute([
                     "username" => $username,
                     "password" => $hashedPassword
@@ -41,7 +38,8 @@ try {
         }
     }
 } catch (PDOException $e) {
-    $error = "Database connection failed: " . $e->getMessage();
+    error_log($e->getMessage());
+    $error = "An error occurred. Please try again.";
 }
 ?>
 <!DOCTYPE html>

@@ -1,27 +1,22 @@
 <?php
+require_once 'config.php';
 session_start();
 
+// For portfolio.php - keep the session check
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
     header("Location: login.php");
     exit;
 }
 
-$host = "localhost";
-$db   = "portfolio_db";
-$user = "postgres";
-$pass = "1234567890";
-
 $error = '';
 $userData = [];
+$db = Database::getInstance()->getConnection();
 
 try {
-    $pdo = new PDO("pgsql:host=$host;dbname=$db", $user, $pass);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-    $stmt = $pdo->prepare("SELECT username, full_name, email, phone, skills, education, bio FROM users WHERE id = :id");
+    $stmt = $db->prepare("SELECT username, full_name, email, phone, skills, education, bio FROM users WHERE id = :id");
     $stmt->execute(["id" => $_SESSION["user_id"]]);
-    $userData = $stmt->fetch(PDO::FETCH_ASSOC);
-
+    $userData = $stmt->fetch();
+    
     if (!$userData) {
         throw new RuntimeException("Unable to load your resume details.");
     }

@@ -1,42 +1,54 @@
 <?php
+require_once 'config.php';
 session_start();
 
-$host = "localhost";
-$db   = "portfolio_db";
-$user = "postgres";
-$pass = "1234567890";
-
 $error = "";
+$db = Database::getInstance()->getConnection();
 
-try {
-    $pdo = new PDO("pgsql:host=$host;dbname=$db", $user, $pass);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        $username = trim($_POST["username"]);
-        $password = trim($_POST["password"]);
-
-        if ($username === "" || $password === "") {
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // CSRF Validation
+    if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        $error = "Invalid security token. Please refresh and try again.";
+    } else {
+        checkRateLimit('login_' . $_SERVER['REMOTE_ADDR']);
+        
+        $username = sanitizeInput($_POST["username"]);
+        $password = $_POST["password"];
+        
+        if (empty($username) || empty($password)) {
             $error = "All fields are required!";
         } else {
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE username = :username");
-            $stmt->execute(["username" => $username]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($user && password_verify($password, $user["password"])) {
-                $_SESSION["loggedin"] = true;
-                $_SESSION["user_id"] = $user["id"];
-                $_SESSION["username"] = $user["username"];
-                header("Location: dashboard.php");
-                exit;
-            } else {
-                $error = "Incorrect username or password.";
+            try {
+                $stmt = $db->prepare("SELECT * FROM users WHERE username = :username");
+                $stmt->execute(["username" => $username]);
+                $user = $stmt->fetch();
+                
+                if ($user && password_verify($password, $user["password"])) {
+                    session_regenerate_id(true);
+                    
+                    $_SESSION["loggedin"] = true;
+                    $_SESSION["user_id"] = $user["id"];
+                    $_SESSION["username"] = $user["username"];
+                    
+                    // Update last_login
+                    $updateLogin = $db->prepare("UPDATE users SET last_login = NOW() WHERE id = :id");
+                    $updateLogin->execute(["id" => $user["id"]]);
+                    
+                    unset($_SESSION['rate_limit_login_' . $_SERVER['REMOTE_ADDR']]);
+                    
+                    header("Location: dashboard.php");
+                    exit;
+                } else {
+                    $error = "Incorrect username or password.";
+                }
+            } catch (PDOException $e) {
+                error_log($e->getMessage());
+                $error = "An error occurred. Please try again later.";
             }
         }
     }
-} catch (PDOException $e) {
-    $error = "Database connection failed: " . $e->getMessage();
-}
+} 
+$csrfToken = generateCSRFToken();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -52,14 +64,17 @@ try {
       <p class="error"><?php echo htmlspecialchars($error); ?></p>
     <?php endif; ?>
     <form action="login.php" method="POST">
-      <label for="username">Username:</label>
-      <input type="text" name="username" required>
+  <!-- Add this line -->
+  <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
+  
+  <label for="username">Username:</label>
+  <input type="text" name="username" required>
 
-      <label for="password">Password:</label>
-      <input type="password" name="password" required>
+  <label for="password">Password:</label>
+  <input type="password" name="password" required>
 
-      <button type="submit">Login</button>
-    </form>
+  <button type="submit">Login</button>
+</form>
     <p>Don't have an account? <a href="signup.php">Sign Up</a></p>
   </div>
 </body>

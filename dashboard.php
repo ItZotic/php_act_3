@@ -1,4 +1,5 @@
 <?php
+require_once 'config.php';
 session_start();
 
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
@@ -6,82 +7,86 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
     exit;
 }
 
-$host = "localhost";
-$db   = "portfolio_db";
-$user = "postgres";
-$pass = "1234567890";
-
 $success = "";
 $errors = [];
 $userData = [];
+$db = Database::getInstance()->getConnection();
 
 try {
-    $pdo = new PDO("pgsql:host=$host;dbname=$db", $user, $pass);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-    $stmt = $pdo->prepare("SELECT * FROM users WHERE id = :id");
+    $stmt = $db->prepare("SELECT * FROM users WHERE id = :id");
     $stmt->execute(["id" => $_SESSION["user_id"]]);
-    $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+    $userData = $stmt->fetch();
 
     if (!$userData) {
         throw new RuntimeException("Unable to load your profile details.");
     }
 
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
-        $fullName = trim($_POST["full_name"] ?? "");
-        $email    = trim($_POST["email"] ?? "");
-        $phone    = trim($_POST["phone"] ?? "");
-        $skills   = trim($_POST["skills"] ?? "");
-        $education = trim($_POST["education"] ?? "");
-        $bio      = trim($_POST["bio"] ?? "");
+        // CSRF Validation
+        if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+            $errors[] = "Invalid security token. Please refresh and try again.";
+        } else {
+            $fullName = sanitizeInput($_POST["full_name"] ?? "");
+            $email    = sanitizeInput($_POST["email"] ?? "");
+            $phone    = sanitizeInput($_POST["phone"] ?? "");
+            $skills   = sanitizeInput($_POST["skills"] ?? "");
+            $education = sanitizeInput($_POST["education"] ?? "");
+            $bio      = sanitizeInput($_POST["bio"] ?? "");
 
-        if ($fullName === "") {
-            $errors[] = "Full name is required.";
-        }
+            // Validation
+            if (empty($fullName)) {
+                $errors[] = "Full name is required.";
+            }
 
-        if ($email === "" || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $errors[] = "A valid email address is required.";
-        }
+            if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $errors[] = "A valid email address is required.";
+            }
 
-        if ($phone === "") {
-            $errors[] = "Phone number is required.";
-        }
+            if (empty($phone)) {
+                $errors[] = "Phone number is required.";
+            }
 
-        if ($skills === "") {
-            $errors[] = "Please enter at least one skill.";
-        }
+            if (empty($skills)) {
+                $errors[] = "Please enter at least one skill.";
+            }
 
-        if ($education === "") {
-            $errors[] = "Education information is required.";
-        }
+            if (empty($education)) {
+                $errors[] = "Education information is required.";
+            }
 
-        if ($bio === "") {
-            $errors[] = "Bio section cannot be empty.";
-        }
+            if (empty($bio)) {
+                $errors[] = "Bio section cannot be empty.";
+            }
 
-        if (!$errors) {
-            $update = $pdo->prepare(
-                "UPDATE users SET full_name = :full_name, email = :email, phone = :phone, skills = :skills, education = :education, bio = :bio WHERE id = :id"
-            );
-            $update->execute([
-                "full_name" => $fullName,
-                "email" => $email,
-                "phone" => $phone,
-                "skills" => $skills,
-                "education" => $education,
-                "bio" => $bio,
-                "id" => $_SESSION["user_id"]
-            ]);
+            if (empty($errors)) {
+                $update = $db->prepare(
+                    "UPDATE users SET full_name = :full_name, email = :email, phone = :phone, 
+                     skills = :skills, education = :education, bio = :bio, updated_at = NOW() 
+                     WHERE id = :id"
+                );
+                $update->execute([
+                    "full_name" => $fullName,
+                    "email" => $email,
+                    "phone" => $phone,
+                    "skills" => $skills,
+                    "education" => $education,
+                    "bio" => $bio,
+                    "id" => $_SESSION["user_id"]
+                ]);
 
-            $success = "Your resume has been updated.";
-
-            $stmt->execute(["id" => $_SESSION["user_id"]]);
-            $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+                $success = "Your resume has been updated.";
+                
+                $stmt->execute(["id" => $_SESSION["user_id"]]);
+                $userData = $stmt->fetch();
+            }
         }
     }
 } catch (Exception $e) {
-    $errors[] = $e->getMessage();
+    error_log($e->getMessage());
+    $errors[] = "An error occurred. Please try again later.";
 }
+
+$csrfToken = generateCSRFToken();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -112,6 +117,7 @@ try {
     <?php endif; ?>
 
     <form action="dashboard.php" method="POST" class="resume-form">
+      <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
       <div class="form-group">
         <label for="full_name">Full Name</label>
         <input type="text" id="full_name" name="full_name" value="<?php echo htmlspecialchars($userData["full_name"] ?? ""); ?>" required>
