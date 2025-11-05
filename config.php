@@ -1,9 +1,8 @@
 <?php
-// config.php - Store this OUTSIDE the web root in production
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'portfolio_db');
 define('DB_USER', 'postgres');
-define('DB_PASS', '1234567890'); // Change this to YOUR PostgreSQL password
+define('DB_PASS', '1234567890');
 
 // CSRF Token Generation
 function generateCSRFToken() {
@@ -53,7 +52,6 @@ class Database {
     }
 }
 
-// Rate Limiting (Simple Implementation)
 function checkRateLimit($identifier, $maxAttempts = 5, $timeWindow = 900) {
     $key = 'rate_limit_' . $identifier;
     
