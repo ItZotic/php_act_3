@@ -1,3 +1,23 @@
+:root{
+ 
+  --pg-900: #062920; 
+  --pg-800: #0a3f31;
+  --pg-700: #0e6b4e; 
+  --pg-600: #128a64;
+  --pg-500: #19b07f; 
+  --pg-300: #8fe3bf; 
+  --pg-100: #eaf8f3; 
+
+  --bg: var(--pg-100);
+  --card-bg: #ffffff;
+  --text: #12241f; 
+  --muted: #53615a;
+  --border: rgba(6,41,32,0.08);
+  --shadow: 0 6px 20px rgba(6,41,32,0.08);
+
+  --success: var(--pg-700);
+  --danger: #d32f2f;
+}
 
 * {
   margin: 0;
@@ -7,8 +27,8 @@
 }
 
 body {
-  background: #f4f6f9;
-  color: #333;
+  background: var(--bg);
+  color: var(--text);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -24,45 +44,62 @@ body {
   font-size: 2.5rem;
   font-weight: 600;
   margin-bottom: 10px;
-  color: #222;
+  color: var(--pg-900);
 }
 
 .site-header p {
   font-size: 1rem;
-  color: #555;
+  color: var(--muted);
 }
 
-.login-container {
-  max-width: 400px;
+
+.login-container,
+.dashboard-container,
+.public-resume,
+.resume-container,
+.home-container {
+  max-width: 820px;
   width: 100%;
   margin: 40px auto;
   padding: 30px;
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
   text-align: center;
 }
+
+
+.login-container { max-width: 400px; margin: 40px auto; }
+.home-container { max-width: 600px; margin: 60px auto; }
+
 
 .login-container .avatar {
   font-size: 40px;
   margin-bottom: 15px;
-  color: #6a1b9a;
+  color: var(--pg-700);
 }
 
 .login-container h2 {
   margin-bottom: 20px;
   font-weight: 600;
-  color: #222;
+  color: var(--pg-900);
 }
 
-.login-container input {
+
+.login-container input,
+.resume-form input,
+.resume-form textarea {
   width: 100%;
   padding: 12px;
   margin: 10px 0;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 14px;
+  color: var(--text);
+  background: linear-gradient(180deg, #fff, #fbfffd);
 }
+
 
 .login-container .options {
   display: flex;
@@ -71,15 +108,17 @@ body {
   gap: 8px;
   margin-bottom: 15px;
   font-size: 0.9rem;
-  color: #555;
+  color: var(--muted);
 }
 
 .login-container .options input[type="checkbox"] {
   transform: scale(1.1);
 }
 
+
 .login-container button,
-.login-container .signup-btn {
+.login-container .signup-btn,
+.btn {
   display: block;
   width: 100%;
   padding: 12px;
@@ -88,46 +127,28 @@ body {
   font-size: 15px;
   margin-top: 10px;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: background 0.25s ease, transform 0.08s ease;
   text-decoration: none;
   color: #fff;
-  background: #4285f4;
+  background: var(--pg-700);
 }
+
 
 .login-container button:hover,
-.login-container .signup-btn:hover {
-  background: #3367d6;
+.login-container .signup-btn:hover,
+.btn:hover {
+  background: var(--pg-900);
+  transform: translateY(-1px);
 }
+
 
 .signup-btn {
-  background: #6a1b9a;
+  background: var(--pg-500);
 }
-
 .signup-btn:hover {
-  background: #4a148c;
+  background: var(--pg-700);
 }
 
-.error {
-  color: red;
-  margin-bottom: 15px;
-  font-size: 0.9rem;
-}
-
-.success {
-  color: #2e7d32;
-  margin-bottom: 15px;
-  font-size: 0.95rem;
-}
-
-.dashboard-container {
-  max-width: 820px;
-  width: 100%;
-  margin: 40px auto;
-  padding: 30px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
 
 .resume-form {
   display: grid;
@@ -143,14 +164,7 @@ body {
 .resume-form label {
   font-weight: 600;
   margin-bottom: 6px;
-}
-
-.resume-form input,
-.resume-form textarea {
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 0.95rem;
+  color: var(--pg-900);
 }
 
 .resume-form textarea {
@@ -164,39 +178,12 @@ body {
   align-items: center;
 }
 
-.public-resume {
-  max-width: 800px;
-  margin: 40px auto;
-  padding: 30px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  line-height: 1.6;
-}
 
-.resume-footer {
-  margin-top: 30px;
-  text-align: center;
-}
-
-.resume-container {
-  max-width: 800px;
-  margin: 30px auto;
-  padding: 30px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  line-height: 1.6;
-}
-
-.resume-container h2 {
-  margin-bottom: 5px;
-}
-
+.resume-container h2 { margin-bottom: 5px; color: var(--pg-900); }
 .resume-container h3 {
   margin-top: 25px;
-  color: #333;
-  border-left: 4px solid #4dadfc;
+  color: var(--pg-900);
+  border-left: 4px solid var(--pg-500);
   padding-left: 10px;
 }
 
@@ -204,67 +191,81 @@ body {
   list-style: none;
   padding-left: 0;
 }
+.resume-container ul li { margin: 8px 0; }
 
-.resume-container ul li {
-  margin: 8px 0;
-}
-
+/* grid */
 .grid-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 8px;
 }
 
-.center-text {
-  text-align: center;
-}
+
+.center-text { text-align: center; }
 
 hr {
   margin: 20px 0;
   border: none;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid rgba(6,41,32,0.06);
 }
 
 .home-container {
-  max-width: 600px;
-  margin: 60px auto;
   padding: 30px;
-  background: #fff;
+  background: var(--card-bg);
   text-align: center;
   border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow);
 }
+
 
 .btn {
   display: inline-block;
-  background: #2163aa;
+  background: var(--pg-700);
   color: white;
   padding: 10px 20px;
   margin: 10px;
   text-decoration: none;
   border-radius: 6px;
-  transition: background 0.3s ease;
+  transition: background 0.3s ease, transform 0.08s ease;
+  width: auto; /* allow inline size */
 }
 
 .btn.secondary {
-  background: #6a1b9a;
+  background: var(--pg-500);
+  color: #04211b;
 }
 
 .btn.secondary:hover {
-  background: #4a148c;
+  background: var(--pg-700);
+  color: #fff;
 }
 
 .btn:hover {
-  background: #174a7a;
+  background: var(--pg-900);
 }
 
 .logout-btn {
   display: inline-block;
   margin-top: 20px;
-  color: #2163aa;
+  color: var(--pg-700);
   text-decoration: none;
 }
+.logout-btn:hover { text-decoration: underline; color: var(--pg-900); }
 
-.logout-btn:hover {
-  text-decoration: underline;
+/* feedback messages */
+.error {
+  color: var(--danger);
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+}
+
+.success {
+  color: var(--success);
+  margin-bottom: 15px;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 520px) {
+  .site-header h1 { font-size: 1.8rem; }
+  .login-container, .home-container { padding: 20px; margin: 24px 12px; }
 }
